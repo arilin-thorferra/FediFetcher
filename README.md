@@ -5,13 +5,15 @@ This GitHub repository provides a simple script that can pull missing posts into
 1. It can pull missing remote replies to posts that are already on your server into your server. Specifically, it can
    1. fetch missing replies to posts that users on your instance have already replied to,
    2. fetch missing replies to the most recent posts in your home timeline,
-   3. fetch missing replies to your bookmarks.
-   4. fetch missing replies to your favourites.
+   3. fetch missing replies to your bookmarks,
+   4. fetch missing replies to your favourites,
+   5. fetch missing replies to the most recent posts in your lists.
 2. It can also backfill profiles on your instance. In particular it can
    1. fetch missing posts from users that have recently appeared in your notifications,
-   1. fetch missing posts from users that you have recently followed,
-   2. fetch missing posts form users that have recently followed you,
-   3. fetch missing posts form users that have recently sent you a follow request.
+   2. fetch missing posts from users that you have recently followed,
+   3. fetch missing posts from users that have recently followed you,
+   4. fetch missing posts from users that have recently sent you a follow request,
+   5. fetch missing posts from users that have recently been added to your lists.
 
 Each part of this script is fully configurable, and you can completely disable parts that you are not interested in.
 
@@ -25,7 +27,12 @@ For detailed information on the how and why, please read the [FediFetcher for Ma
 
 FediFetcher makes use of the Mastodon API. It'll run against any instance implementing this API, and whilst it was built for Mastodon, it's been [confirmed working against Pleroma](https://fed.xnor.in/objects/6bd47928-704a-4cb8-82d6-87471d1b632f) as well.
 
-FediFetcher will pull in posts and profiles from any servers running the following software: Mastodon, Pleroma, Akkoma, Pixelfed, Hometown, Misskey, Firefish (Calckey), Foundkey, and Lemmy.
+FediFetcher will pull in posts and profiles from any servers running the following software: 
+
+- Servers that implement the Mastodon API: Mastodon, Pleroma, Akkoma, Pixelfed, Hometown, Iceshrimp,
+- Servers that implement the Misskey API: Misskey, Calckey, Firefish, Foundkey, Sharkey,
+- Lemmy,
+- Peertube.
 
 ## Setup
 
@@ -129,7 +136,6 @@ Please find the list of all configuration options, including descriptions, below
 
 Option | Required? | Notes |
 |:----------------------------------------------------|-----------|:------|
-|`log-level` | No | The severity of messages to log. Possible values are `DEBUG`, `INFO`, `WARNING`, `ERROR`, and `CRITICAL`. Defaults to `DEBUG`. |
 |`access-token` | Yes | The access token. If using GitHub action, this needs to be provided as a Secret called  `ACCESS_TOKEN`. If running as a cron job or a container, you can supply this option as array, to [fetch posts for multiple users](https://blog.thms.uk/2023/04/muli-user-support-for-fedifetcher) on your instance. |
 |`server`|Yes|The domain only of your mastodon server (without `https://` prefix) e.g. `mstdn.thms.uk`. |
 |`home-timeline-length` | No | Provide to fetch remote replies to posts in the API-Key owner's home timeline. Determines how many posts we'll fetch replies for. Recommended value: `200`.
@@ -142,6 +148,9 @@ Option | Required? | Notes |
 | `reply-interval-in-hours` | No | Provide to fetch remote replies to posts that have received replies from users on your own instance. Determines how far back in time we'll go to find posts that have received replies. You must be administrator on your instance to use this option, and this option is not supported on Pleroma / Akkoma and its forks. Recommend value: `0` (disabled). Requires an access token with `admin:read:accounts`.
 |`backfill-with-context` | No | Set to `0` to disable fetching remote replies while backfilling profiles. This is enabled by default, but you can disable it, if it's too slow for you.
 |`backfill-mentioned-users` | No | Set to `0` to disable backfilling any mentioned users when fetching the home timeline. This is enabled by default, but you can disable it, if it's too slow for you.
+| `from-lists`| No | Set to `1` to fetch missing replies and/or backfill account from your lists. This is disabled by default. Requires an access token with `read:lists` scope. |
+| `max-list-length` | No | Determines how many posts we'll fetch replies for in each list. Default value: `100`. This will be ignored, unless you also provide `from-lists = 1`. Set to `0` if you only want to backfill profiles in lists. |
+| `max-list-accounts` | No | Determines how many accounts we'll backfill for in each list. Default value: `10`. This will be ignored, unless you also provide `from-lists = 1`. Set to `0` if you only want to fetch replies in lists. |
 | `remember-users-for-hours` | No | How long between back-filling attempts for non-followed accounts? Defaults to `168`, i.e. one week.
 | `remember-hosts-for-days` | No | How long should FediFetcher cache host info for? Defaults to `30`.
 | `http-timeout` | No | The timeout for any HTTP requests to the Mastodon API in seconds. Defaults to `5`.
@@ -151,6 +160,8 @@ Option | Required? | Notes |
 | `on-start` | No | Optionally provide a callback URL that will be pinged when processing is starting. A query parameter `rid={uuid}` will automatically be appended to uniquely identify each execution. This can be used to monitor your script using a service such as healthchecks.io.
 | `on-done` | No | Optionally provide a callback URL that will be called when processing is finished.  A query parameter `rid={uuid}` will automatically be appended to uniquely identify each execution. This can be used to monitor your script using a service such as healthchecks.io.
 | `on-fail` | No | Optionally provide a callback URL that will be called when processing has failed.  A query parameter `rid={uuid}` will automatically be appended to uniquely identify each execution. This can be used to monitor your script using a service such as healthchecks.io.
+|`log-level` | No | The severity of messages to log. Possible values are `DEBUG`, `INFO`, `WARNING`, `ERROR`, and `CRITICAL`. Defaults to `DEBUG`. |
+|`log-format` | No | The format used for logging. See the [documentation](https://docs.python.org/3/library/logging.html) for details. Defaults to `%(asctime)s: %(message)s` |
 
 ### Multi User support
 
@@ -174,6 +185,8 @@ This is only supported when running FediFetcher as cron job, or container. Multi
    - `read:favourites`
  - If you are supplying `from-notifications` you must additionally enable this scope:
    - `read:notifications`
+ - If you are supplying `from-lists` you must additionally enable this scope:
+   - `read:lists`
 
 ## Acknowledgments
 
