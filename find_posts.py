@@ -21,7 +21,7 @@ import hashlib
 logger = logging.getLogger("FediFetcher")
 robotParser = urllib.robotparser.RobotFileParser()
 
-VERSION = "7.1.3"
+VERSION = "7.1.6"
 
 argparser=argparse.ArgumentParser()
 
@@ -99,7 +99,7 @@ def add_user_posts(server, access_token, followings, known_followings, all_known
                             failed += 1
                 logger.info(f"Added {count} posts for user {user['acct']} with {failed} errors")
                 if failed == 0:
-                    known_followings.add(user['acct'])
+                    known_followings.add(user['acct']) 
                     all_known_users.add(user['acct'])
 
 def add_post_with_context(post, server, access_token, seen_urls, seen_hosts):
@@ -1391,7 +1391,7 @@ def get_server_info(server, seen_hosts):
 def set_server_apis(server):
     # support for new server software should be added here
     software_apis = {
-        'mastodonApiSupport': ['mastodon', 'pleroma', 'akkoma', 'pixelfed', 'hometown', 'iceshrimp'],
+        'mastodonApiSupport': ['mastodon', 'pleroma', 'akkoma', 'pixelfed', 'hometown', 'iceshrimp', 'Iceshrimp.NET'],
         'misskeyApiSupport': ['misskey', 'calckey', 'firefish', 'foundkey', 'sharkey'],
         'lemmyApiSupport': ['lemmy'],
         'peertubeApiSupport': ['peertube']
@@ -1487,6 +1487,28 @@ if __name__ == "__main__":
         else:
             logger.critical(f"Config file {arguments.config} doesn't exist")
             sys.exit(1)
+
+    for envvar, value in os.environ.items():
+        envvar = envvar.lower()
+        if envvar.startswith("ff_") and not envvar.startswith("ff_access_token"):
+            envvar = envvar[3:]
+            # most settings are numerical
+            if envvar not in [
+                "server",
+                "lock_file",
+                "state_dir",
+                "on_start",
+                "on_done",
+                "on_fail",
+                "log_level",
+                "log_format"
+            ]:
+                value = int(value)
+            setattr(arguments, envvar, value)
+
+    # remains special-cased for specifying multiple tokens
+    if tokens := [token for envvar, token in os.environ.items() if envvar.lower().startswith("ff_access_token")]:
+        arguments.access_token = tokens
 
     logger.info(f"Starting FediFetcher")
 
