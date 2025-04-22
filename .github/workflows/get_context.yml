@@ -40,4 +40,4 @@ jobs:
       - name: Checkout user's forked repository for keeping workflow alive
         uses: actions/checkout@v4
       - name: Keep workflow alive
-        uses: gautamkrishnar/keepalive-workflow@v1
+        uses: liskin/gh-workflow-keepalive@v1
